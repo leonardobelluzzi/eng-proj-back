@@ -51,8 +51,9 @@ public class AuthController {
         if (user.isPresent()) {
             Session session = sessionService.createSession(user.get());
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Login bem-sucedido");
             response.put("token", session.getToken());
+            response.put("id", user.get().getId().toString());
+            response.put("username", user.get().getUsername());
             return ResponseEntity.ok(response);
         } else {
             Map<String, String> response = new HashMap<>();
