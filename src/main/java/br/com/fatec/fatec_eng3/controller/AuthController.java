@@ -28,17 +28,21 @@ public class AuthController {
     private SessionService sessionService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody @Valid UserRegistrationDTO userRegistrationDTO) {
+    public ResponseEntity<Map<String, String>> register(@RequestBody @Valid UserRegistrationDTO userRegistrationDTO) {
       try {
         User user = new User();
 
         user.setUsername(userRegistrationDTO.getUsername());
         user.setPassword(userRegistrationDTO.getPassword());
         authService.register(user);
-        return ResponseEntity.ok("Usuário registrado com sucesso");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Usuário registrado com sucesso.");
+        return ResponseEntity.ok(response);
       } catch (Exception e) {
         if (e instanceof IllegalArgumentException) {
-          return ResponseEntity.unprocessableEntity().body(e.getMessage());
+          Map<String, String> response = new HashMap<>();
+          response.put("message", e.getMessage());
+          return ResponseEntity.unprocessableEntity().body(response);
         }
 
         throw e;
