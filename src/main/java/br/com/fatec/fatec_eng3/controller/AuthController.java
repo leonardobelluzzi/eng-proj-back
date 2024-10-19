@@ -1,5 +1,6 @@
 package br.com.fatec.fatec_eng3.controller;
 
+import br.com.fatec.fatec_eng3.controller.dto.LoginResponseDTO;
 import br.com.fatec.fatec_eng3.controller.dto.UserLoginDTO;
 import br.com.fatec.fatec_eng3.controller.dto.UserRegistrationDTO;
 import br.com.fatec.fatec_eng3.model.User;
@@ -50,14 +51,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody @Valid UserLoginDTO userLoginDTO) {
+    public ResponseEntity<?> login(@RequestBody @Valid UserLoginDTO userLoginDTO) {
         Optional<User> user = authService.login(userLoginDTO.getUsername(), userLoginDTO.getPassword());
         if (user.isPresent()) {
             Session session = sessionService.createSession(user.get());
-            Map<String, String> response = new HashMap<>();
-            response.put("token", session.getToken());
-            response.put("id", user.get().getId().toString());
-            response.put("username", user.get().getUsername());
+            User userEntity = user.get();
+            LoginResponseDTO response = new LoginResponseDTO(session.getToken(), userEntity.getId(), userEntity.getUsername(), userEntity.getWallet().getCoins());
             return ResponseEntity.ok(response);
         } else {
             Map<String, String> response = new HashMap<>();
