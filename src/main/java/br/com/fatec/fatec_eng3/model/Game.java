@@ -11,6 +11,8 @@ public class Game {
     private Boolean firstPlayerReady = false;
     private Boolean secondPlayerReady = false;
 
+    private String gameId;
+
     @Enumerated(EnumType.STRING)
     private GameStatus status;
 
@@ -66,5 +68,13 @@ public class Game {
 
     public void setSecondPlayer(User secondPlayer) {
       this.secondPlayer = secondPlayer;
+    }
+
+     public String getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(String gameId) {
+        this.gameId = gameId;
     }
 }
