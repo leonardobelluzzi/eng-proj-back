@@ -5,7 +5,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.com.fatec.fatec_eng3.model.User;
+import br.com.fatec.fatec_eng3.model.Wallet;
 import br.com.fatec.fatec_eng3.repository.UserRepository;
+import br.com.fatec.fatec_eng3.repository.WalletRepository;
 
 import java.util.Optional;
 
@@ -15,16 +17,27 @@ public class AuthService {
     @Autowired
     private UserRepository userRepository;
 
+     @Autowired
+    private WalletRepository walletRepository; 
+
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public User register(User user) {
-      Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
-      if (existingUser.isPresent()) {
-          throw new IllegalArgumentException("O nome de usuário já está em uso.");
-      }
-      
+        Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
+        if (existingUser.isPresent()) {
+            throw new IllegalArgumentException("O nome de usuário já está em uso.");
+        }
+
+        Wallet wallet = new Wallet();
+        wallet.addCoins(200L);
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        user.setWallet(wallet);
+
+        User savedUser = userRepository.save(user);
+        walletRepository.save(wallet);
+
+        return savedUser;
     }
 
     public Optional<User> login(String username, String password) {
