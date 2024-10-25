@@ -1,101 +1,77 @@
 package br.com.fatec.fatec_eng3.service;
 
-import br.com.fatec.fatec_eng3.controller.dto.CreateGame;
-import br.com.fatec.fatec_eng3.controller.dto.JoinGame;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import javax.naming.NameNotFoundException;
-import javax.naming.NoPermissionException;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Scope;
+import br.com.fatec.fatec_eng3.exception.GameAlreadyCompleteException;
+import br.com.fatec.fatec_eng3.exception.GameNotFoundException;
+import br.com.fatec.fatec_eng3.exception.UserAlreadyInGameException;
+import br.com.fatec.fatec_eng3.exception.UserNotFoundException;
+import br.com.fatec.fatec_eng3.model.Game;
+import br.com.fatec.fatec_eng3.model.GameStatus;
+import br.com.fatec.fatec_eng3.model.User;
+import br.com.fatec.fatec_eng3.repository.GameRepository;
+import br.com.fatec.fatec_eng3.repository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
-@Scope("prototype")
 public class GameService {
 
-  private Map<String, Game> data;
+    @Autowired
+    private GameRepository gameRepository;
 
-  public GameService() {
-    this.data = new HashMap<String, Game>();
-  }
+    @Autowired
+    private UserRepository userRepository;
 
-  public Game createNewGame(CreateGame create) {
-    Game game = genrategenerateNewGame(create.getNamePlayerOne());
+    public Game createGame(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new UserNotFoundException("User not found.");
+        }
 
-    data.put(game.getKey(), game);
+        if (gameRepository.isUserAlreadyInActiveGame(userId)) {
+            throw new UserAlreadyInGameException("User already in an active game.");
+        }
 
-    return game;
-  }
+        Game game = new Game();
 
-  public Game joinGame(JoinGame join) throws NameNotFoundException {
-    Game game = data.get(join.getJoinKey());
+        game.setFirstPlayer(user.get()); 
+        game.setStatus(GameStatus.WAITING_FOR_PLAYERS);
+        gameRepository.save(game);
 
-    if (game == null) {
-      throw new NameNotFoundException(
-        "Game not found to key " + join.getJoinKey()
-      );
+        return game;
     }
 
-    game.setNamePlayerTwo(join.getJoinNamePlayerTwo());
+    public Game addPlayerToGame(String gameId, Long userId) throws Exception {
+        Optional<Game> gameOptional = gameRepository.findByGameId(gameId);
+        
+        if (gameOptional.isEmpty()) {
+            throw new GameNotFoundException("Game not found.");
+        }
 
-    data.put(game.getKey(), game);
+        Game game = gameOptional.get();
+        if (game.getSecondPlayerReady()) {
+            throw new GameAlreadyCompleteException("Game is already full.");
+        }
 
-    return game;
-  }
+        Optional<User> user = userRepository.findById(userId);
 
-  public Game genrategenerateNewGame(String playerOneName) {
-    Game game = Game
-      .builder()
-      .key(generateNewChave())
-      .gameStatus(GameStatus.CREATED)
-      .namePlayerOne(playerOneName)
-      .build();
+        if (user.isEmpty()) {
+            throw new UserNotFoundException("User not found.");
+        }
 
-    return game;
-  }
+        if (gameRepository.isUserAlreadyInActiveGame(userId)) {
+            throw new UserAlreadyInGameException("User already in an active game.");
+        }
 
-  public String generateNewChave() {
-    return UUID.randomUUID().toString();
-  }
+        game.setSecondPlayer(user.get());
+        game.setSecondPlayerReady(true);
+        game.setStatus(GameStatus.WAITING_FOR_CONSENT);
 
-  public Object findGame(String key)
-    throws NoPermissionException, NameNotFoundException {
-    Game game = data.get(key);
+        gameRepository.save(game);
 
-    if (game == null) {
-      throw new NameNotFoundException("Game not found to key " + key);
-    } else if (game.getGameStatus() != GameStatus.FINISHED) {
-      throw new NoPermissionException("Jogo nao terminou");
+        return game;
+
     }
-    return game;
-  }
-
-  public Game finishGame(Game game) throws NameNotFoundException {
-    Game gameAux = data.get(game.getKey());
-
-    if (gameAux == null) {
-      throw new NameNotFoundException("Game not found to key " + game.getKey());
-    }
-
-    //Atualizar player 1
-    if (
-      StringUtils.equals(game.getNamePlayerOne(), gameAux.getNamePlayerOne())
-    ) {
-      gameAux.setPointPlayerOne(game.getPointPlayerOne());
-    }
-
-    //Atualizar player 2
-    if (
-      StringUtils.equals(game.getNamePlayerTwo(), gameAux.getNamePlayerTwo())
-    ) {
-      gameAux.setPointPlayerOne(game.getPointPlayerTwo());
-    }
-
-    //Verificar se o jogo ja terminou
-    data.put(game.getKey(), gameAux);
-
-    return gameAux;
-  }
 }
