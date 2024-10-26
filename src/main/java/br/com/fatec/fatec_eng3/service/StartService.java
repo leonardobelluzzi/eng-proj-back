@@ -1,7 +1,6 @@
 package br.com.fatec.fatec_eng3.service;
 
 import java.util.List;
-import java.util.Locale.Category;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class JoinGame {
 
-  private String joinKey;
+  private Long idUser;
 
-  private String JoinNamePlayerTwo;
+  private String roomCode;
 }

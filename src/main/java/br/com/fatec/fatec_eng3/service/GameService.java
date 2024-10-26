@@ -1,101 +1,88 @@
 package br.com.fatec.fatec_eng3.service;
 
-import br.com.fatec.fatec_eng3.controller.dto.CreateGame;
-import br.com.fatec.fatec_eng3.controller.dto.JoinGame;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+
 import javax.naming.NameNotFoundException;
-import javax.naming.NoPermissionException;
-import org.apache.commons.lang3.StringUtils;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import br.com.fatec.fatec_eng3.repository.GameRepository;
 
 @Service
 @Scope("prototype")
 public class GameService {
 
-  private Map<String, Game> data;
+  @Autowired
+  private QuestionService questionService;
 
-  public GameService() {
-    this.data = new HashMap<String, Game>();
-  }
+  @Autowired
+  private GameRepository gameRepository;
 
-  public Game createNewGame(CreateGame create) {
-    Game game = genrategenerateNewGame(create.getNamePlayerOne());
 
-    data.put(game.getKey(), game);
+  public Game joinGame(Long idJogo, Long idPlayerTwo) throws NameNotFoundException {
+    Optional<Game> game = gameRepository.findById(idJogo);
 
-    return game;
-  }
-
-  public Game joinGame(JoinGame join) throws NameNotFoundException {
-    Game game = data.get(join.getJoinKey());
-
-    if (game == null) {
+    if (!game.isPresent()) {
       throw new NameNotFoundException(
-        "Game not found to key " + join.getJoinKey()
-      );
+          "Game not found to key " + idJogo);
     }
 
-    game.setNamePlayerTwo(join.getJoinNamePlayerTwo());
+    Game gameSource = game.get();
 
-    data.put(game.getKey(), game);
+    if (gameSource.getGameStatus() != GameStatus.CREATED){
+
+      throw new NameNotFoundException(
+          "Game not palying or finished " + idJogo);
+
+    }
+
+    gameSource.setGameStatus(GameStatus.PLAYING);
+    gameSource.setIdPlayerTwo(idPlayerTwo);
+
+    return gameRepository.save(gameSource);
+  }
+
+  public Game generateNewGame(Long playerOneName) {
+    Game game = Game
+        .builder()
+        .gameStatus(GameStatus.CREATED)
+        .idPlayerOne(playerOneName)
+        .questions(questionService.getAnswersToGame())
+        .build();
+
+    game = gameRepository.save(game);
+
+    game.setIdFormat(String.format("%06d", game.getId()));
 
     return game;
   }
 
-  public Game genrategenerateNewGame(String playerOneName) {
-    Game game = Game
-      .builder()
-      .key(generateNewChave())
-      .gameStatus(GameStatus.CREATED)
-      .namePlayerOne(playerOneName)
-      .build();
+  public Game canStartNewGame(Long idGame) throws NameNotFoundException {
+    Optional<Game> game = gameRepository.findById(idGame);
 
-    return game;
+    if (!game.isPresent()) {
+      throw new NameNotFoundException(
+          "Game not found to key " + idGame);
+    }
+
+    Game gameSource = game.get();
+
+    if (gameSource.getGameStatus() == GameStatus.PLAYING){
+
+      return gameSource;
+    }
+
+    return null;
+    
   }
 
   public String generateNewChave() {
     return UUID.randomUUID().toString();
   }
 
-  public Object findGame(String key)
-    throws NoPermissionException, NameNotFoundException {
-    Game game = data.get(key);
 
-    if (game == null) {
-      throw new NameNotFoundException("Game not found to key " + key);
-    } else if (game.getGameStatus() != GameStatus.FINISHED) {
-      throw new NoPermissionException("Jogo nao terminou");
-    }
-    return game;
-  }
 
-  public Game finishGame(Game game) throws NameNotFoundException {
-    Game gameAux = data.get(game.getKey());
-
-    if (gameAux == null) {
-      throw new NameNotFoundException("Game not found to key " + game.getKey());
-    }
-
-    //Atualizar player 1
-    if (
-      StringUtils.equals(game.getNamePlayerOne(), gameAux.getNamePlayerOne())
-    ) {
-      gameAux.setPointPlayerOne(game.getPointPlayerOne());
-    }
-
-    //Atualizar player 2
-    if (
-      StringUtils.equals(game.getNamePlayerTwo(), gameAux.getNamePlayerTwo())
-    ) {
-      gameAux.setPointPlayerOne(game.getPointPlayerTwo());
-    }
-
-    //Verificar se o jogo ja terminou
-    data.put(game.getKey(), gameAux);
-
-    return gameAux;
-  }
 }
