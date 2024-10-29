@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import br.com.fatec.fatec_eng3.model.User;
 import br.com.fatec.fatec_eng3.repository.GameRepository;
 
 @Service
@@ -21,6 +22,8 @@ public class GameService {
   @Autowired
   private GameRepository gameRepository;
 
+  @Autowired
+  private AuthService authService;
 
   public Game joinGame(Long idJogo, Long idPlayerTwo) throws NameNotFoundException {
     Optional<Game> game = gameRepository.findById(idJogo);
@@ -32,7 +35,7 @@ public class GameService {
 
     Game gameSource = game.get();
 
-    if (gameSource.getGameStatus() != GameStatus.CREATED){
+    if (gameSource.getGameStatus() != GameStatus.CREATED) {
 
       throw new NameNotFoundException(
           "Game not palying or finished " + idJogo);
@@ -46,6 +49,7 @@ public class GameService {
   }
 
   public Game generateNewGame(Long playerOneName) {
+
     Game game = Game
         .builder()
         .gameStatus(GameStatus.CREATED)
@@ -60,7 +64,7 @@ public class GameService {
     return game;
   }
 
-  public Game canStartNewGame(Long idGame) throws NameNotFoundException {
+  public Boolean canStartNewGame(Long idGame) throws NameNotFoundException {
     Optional<Game> game = gameRepository.findById(idGame);
 
     if (!game.isPresent()) {
@@ -70,19 +74,35 @@ public class GameService {
 
     Game gameSource = game.get();
 
-    if (gameSource.getGameStatus() == GameStatus.PLAYING){
+    if (gameSource.getGameStatus() == GameStatus.PLAYING) {
 
-      return gameSource;
+      return true;
     }
 
-    return null;
-    
+    return false;
+
   }
 
   public String generateNewChave() {
     return UUID.randomUUID().toString();
   }
 
+  public Object searchGame(String id) throws NameNotFoundException {
+    Long a = Long.valueOf(id);
 
+    Optional<Game> game = gameRepository.findById(a);
+
+    if (!game.isPresent()) {
+      throw new NameNotFoundException(
+          "Game not found to key " + id);
+    }
+
+    return game.get();
+  }
+
+public Game saveGame(Game gameSource) {
+
+    return gameRepository.save(gameSource);
+}
 
 }

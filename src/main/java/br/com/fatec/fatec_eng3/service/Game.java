@@ -3,6 +3,7 @@ package br.com.fatec.fatec_eng3.service;
 import java.util.List;
 
 import br.com.fatec.fatec_eng3.model.Question;
+import br.com.fatec.fatec_eng3.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,19 +34,17 @@ public class Game {
   private Long id;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "game_status", nullable = true)
+  @Column(name = "game_status")
   private GameStatus gameStatus;
 
-  @Column(name = "id_player_one", nullable = true)
   private Long idPlayerOne;
 
-  @Column(name = "id_player_two")
   private Long idPlayerTwo;
 
-  @Column(name = "point_player_one", nullable = true)
+  @Column(name = "point_player_one")
   private Integer pointPlayerOne;
 
-  @Column(name = "point_player_two", nullable = true)
+  @Column(name = "point_player_two")
   private Integer pointPlayerTwo;
 
   @ManyToMany

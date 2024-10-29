@@ -64,17 +64,36 @@ public class QuestGameController {
     }
   }
 
-  @GetMapping("/canStartGame/{id}")
-  public ResponseEntity<?> joinGame(String id) {
+  @GetMapping("/searchGame/{id}")
+  public ResponseEntity<?> searchGame(@PathVariable String id) {
     try {
-      Game game = produtoService.canStartNewGame(Long.valueOf(id));
+      return ResponseEntity.ok(produtoService.searchGame(id));
+    } catch (NameNotFoundException e) {
+      // caso naome nao exista
+      return ResponseEntity.badRequest().build();
+    } catch (Exception e) {
+      return new ResponseEntity<>(
+          ErrorResponseQuest
+              .builder()
+              .error(e.getMessage())
+              .stack(ExceptionUtils.getStackTrace(e))
+              .build(),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
-      if (game != null) {
+  @GetMapping("/canStartGame/{id}")
+  public ResponseEntity<?> joinGame(@PathVariable String id) {
+    try {
+      Boolean game = produtoService.canStartNewGame(Long.valueOf(id));
 
-        return ResponseEntity.ok(game);
+      if (game) {
+
+        return ResponseEntity.ok("OK");
       }
 
-      return (ResponseEntity<?>) ResponseEntity.noContent();
+      return new ResponseEntity<>("wating",
+          HttpStatus.INTERNAL_SERVER_ERROR);
 
     } catch (Exception e) {
       return new ResponseEntity<>(
@@ -103,6 +122,22 @@ public class QuestGameController {
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+  }
+
+  @PostMapping("/saveGame")
+  public ResponseEntity<?> saveGame(@RequestBody Game gameSource) {
+    try {
+      
+      return ResponseEntity.ok(produtoService.saveGame(gameSource));
+    } catch (Exception e) {
+      return new ResponseEntity<>(
+          ErrorResponseQuest
+              .builder()
+              .error(e.getMessage())
+              .stack(ExceptionUtils.getStackTrace(e))
+              .build(),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @GetMapping("/questions")

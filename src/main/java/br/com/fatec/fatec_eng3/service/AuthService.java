@@ -40,6 +40,13 @@ public class AuthService {
         return savedUser;
     }
 
+    public User findByIDUser(Long id) {
+        if (!userRepository.findById(id).isPresent()) {
+            throw new IllegalArgumentException("Usuário não encontrado.");
+        }
+        return userRepository.findById(id).get();
+    }
+
     public Optional<User> login(String username, String password) {
         Optional<User> user = userRepository.findByUsername(username);
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
