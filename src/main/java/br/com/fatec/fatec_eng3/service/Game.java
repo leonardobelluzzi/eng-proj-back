@@ -47,7 +47,6 @@ public class Game {
   private Long playerOneFinishTime;
 
   private Long playerTwoFinishTime;
-  
 
   @Column(name = "point_player_two")
   private Integer pointPlayerTwo;
