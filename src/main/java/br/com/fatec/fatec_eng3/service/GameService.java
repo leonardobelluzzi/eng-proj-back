@@ -55,6 +55,8 @@ public class GameService {
         .gameStatus(GameStatus.CREATED)
         .idPlayerOne(playerOneName)
         .questions(questionService.getAnswersToGame())
+        .pointPlayerOne(0)
+        .pointPlayerTwo(0)
         .build();
 
     game = gameRepository.save(game);
@@ -104,5 +106,24 @@ public Game saveGame(Game gameSource) {
 
     return gameRepository.save(gameSource);
 }
+
+public Object finishGame(Game gameSource) {
+    
+    long idWinner = vencedor(gameSource);
+  
+    gameSource.setUserWinner(idWinner);
+    gameSource.setGameStatus(GameStatus.FINISHED);
+    return gameRepository.save(gameSource);
+}
+
+private long vencedor(Game gameSource) {
+  // TODO Auto-generated method stub
+  if (gameSource.getPointPlayerOne() > gameSource.getIdPlayerTwo()){
+    return gameSource.getIdPlayerOne()
+  }else{
+    return gameSource.getIdPlayerTwo();
+  }
+}
+
 
 }

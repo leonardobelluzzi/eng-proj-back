@@ -44,6 +44,11 @@ public class Game {
   @Column(name = "point_player_one")
   private Integer pointPlayerOne;
 
+  private Long playerOneFinishTime;
+
+  private Long playerTwoFinishTime;
+  
+
   @Column(name = "point_player_two")
   private Integer pointPlayerTwo;
 
@@ -52,4 +57,7 @@ public class Game {
   private List<Question> questions;
 
   private String idFormat;
+
+  private Long userWinner;
+
 }

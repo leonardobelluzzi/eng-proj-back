@@ -124,11 +124,27 @@ public class QuestGameController {
 
   }
 
-  @PostMapping("/saveGame")
+  @PostMapping(path = "/saveGame", consumes = "application/json", produces = "application/json")
   public ResponseEntity<?> saveGame(@RequestBody Game gameSource) {
     try {
       
       return ResponseEntity.ok(produtoService.saveGame(gameSource));
+    } catch (Exception e) {
+      return new ResponseEntity<>(
+          ErrorResponseQuest
+              .builder()
+              .error(e.getMessage())
+              .stack(ExceptionUtils.getStackTrace(e))
+              .build(),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @PostMapping(path = "/finishGame", consumes = "application/json", produces = "application/json")
+  public ResponseEntity<?> finishGame(@RequestBody Game gameSource) {
+    try {
+      
+      return ResponseEntity.ok(produtoService.finishGame(gameSource));
     } catch (Exception e) {
       return new ResponseEntity<>(
           ErrorResponseQuest
