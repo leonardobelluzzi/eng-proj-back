@@ -140,11 +140,11 @@ public class QuestGameController {
     }
   }
 
-  @PostMapping(path = "/finishGame", consumes = "application/json", produces = "application/json")
-  public ResponseEntity<?> finishGame(@RequestBody Game gameSource) {
+  @PostMapping(path = "/finishGame/{idPlayer}")
+  public ResponseEntity<?> finishGame(@RequestBody Game gameSource, @PathVariable Long idPlayer) {
     try {
       
-      return ResponseEntity.ok(produtoService.finishGame(gameSource));
+      return ResponseEntity.ok(produtoService.finishGame(gameSource, idPlayer));
     } catch (Exception e) {
       return new ResponseEntity<>(
           ErrorResponseQuest

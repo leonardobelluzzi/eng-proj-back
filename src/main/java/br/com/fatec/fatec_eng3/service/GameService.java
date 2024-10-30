@@ -1,5 +1,9 @@
 package br.com.fatec.fatec_eng3.service;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalField;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -107,23 +111,44 @@ public Game saveGame(Game gameSource) {
     return gameRepository.save(gameSource);
 }
 
-public Object finishGame(Game gameSource) {
-    
-    long idWinner = vencedor(gameSource);
-  
-    gameSource.setUserWinner(idWinner);
+public Game finishGame(Game gameSource, Long idPlayer) {
+  gameSource = gameRepository.findById(gameSource.getId()).get();
+
+  if (gameSource.getIdPlayerOne() == idPlayer){
+
+    gameSource.setPlayerOneFinishTime((new Date()).getTime());
+
+  }else{
+
+    gameSource.setPlayerTwoFinishTime((new Date()).getTime());
+  }
+
+  gameSource.setGameStatus(GameStatus.FINISH_PLAYER);
+
+  if (gameSource.getPlayerOneFinishTime() != null && gameSource.getPlayerTwoFinishTime() != null){
+
     gameSource.setGameStatus(GameStatus.FINISHED);
-    return gameRepository.save(gameSource);
+    gameSource.setUserWinner(winner(gameSource));
+  }
+    
+  return gameRepository.save(gameSource);
 }
 
-private long vencedor(Game gameSource) {
+private Long winner(Game gameSource) {
   // TODO Auto-generated method stub
-  if (gameSource.getPointPlayerOne() > gameSource.getIdPlayerTwo()){
-    return gameSource.getIdPlayerOne()
+  if (gameSource.getPointPlayerOne() == gameSource.getPointPlayerTwo()){
+    if (gameSource.getPlayerOneFinishTime() < gameSource.getPlayerTwoFinishTime()){
+
+      return gameSource.getIdPlayerOne();
+    }else{
+
+      return gameSource.getIdPlayerTwo();
+    }
+  }else if (gameSource.getPointPlayerOne() > gameSource.getPointPlayerTwo()){
+    return gameSource.getIdPlayerOne();
   }else{
     return gameSource.getIdPlayerTwo();
   }
 }
-
 
 }
