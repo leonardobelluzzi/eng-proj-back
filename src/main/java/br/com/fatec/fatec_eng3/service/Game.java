@@ -3,7 +3,6 @@ package br.com.fatec.fatec_eng3.service;
 import java.util.List;
 
 import br.com.fatec.fatec_eng3.model.Question;
-import br.com.fatec.fatec_eng3.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
