@@ -1,8 +1,5 @@
 package br.com.fatec.fatec_eng3.service;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalField;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import br.com.fatec.fatec_eng3.model.User;
 import br.com.fatec.fatec_eng3.repository.GameRepository;
 
 @Service
@@ -25,9 +21,6 @@ public class GameService {
 
   @Autowired
   private GameRepository gameRepository;
-
-  @Autowired
-  private AuthService authService;
 
   public Game joinGame(Long idJogo, Long idPlayerTwo) throws NameNotFoundException {
     Optional<Game> game = gameRepository.findById(idJogo);
@@ -93,7 +86,7 @@ public class GameService {
     return UUID.randomUUID().toString();
   }
 
-  public Object searchGame(String id) throws NameNotFoundException {
+  public Game searchGame(String id) throws NameNotFoundException {
     Long a = Long.valueOf(id);
 
     Optional<Game> game = gameRepository.findById(a);
@@ -106,49 +99,62 @@ public class GameService {
     return game.get();
   }
 
-public Game saveGame(Game gameSource) {
+  public Game saveGame(Game gameSource) {
 
     return gameRepository.save(gameSource);
-}
-
-public Game finishGame(Game gameSource, Long idPlayer) {
-  gameSource = gameRepository.findById(gameSource.getId()).get();
-
-  if (gameSource.getIdPlayerOne() == idPlayer){
-
-    gameSource.setPlayerOneFinishTime((new Date()).getTime());
-
-  }else{
-
-    gameSource.setPlayerTwoFinishTime((new Date()).getTime());
   }
 
-  gameSource.setGameStatus(GameStatus.FINISH_PLAYER);
+  public Game finishGame(Game gameSource, Long idPlayer) throws NameNotFoundException {
 
-  if (gameSource.getPlayerOneFinishTime() != null && gameSource.getPlayerTwoFinishTime() != null){
+    Optional<Game> game = gameRepository.findById(gameSource.getId());
 
-    gameSource.setGameStatus(GameStatus.FINISHED);
-    gameSource.setUserWinner(winner(gameSource));
-  }
-    
-  return gameRepository.save(gameSource);
-}
-
-private Long winner(Game gameSource) {
-  // TODO Auto-generated method stub
-  if (gameSource.getPointPlayerOne() == gameSource.getPointPlayerTwo()){
-    if (gameSource.getPlayerOneFinishTime() < gameSource.getPlayerTwoFinishTime()){
-
-      return gameSource.getIdPlayerOne();
-    }else{
-
-      return gameSource.getIdPlayerTwo();
+    if (!game.isPresent()) {
+      throw new NameNotFoundException(
+          "Game not found to key " + gameSource.getId());
     }
-  }else if (gameSource.getPointPlayerOne() > gameSource.getPointPlayerTwo()){
-    return gameSource.getIdPlayerOne();
-  }else{
-    return gameSource.getIdPlayerTwo();
-  }
-}
 
+    Game gameSourceDB = game.get();
+    
+    if (gameSourceDB.getIdPlayerOne() != idPlayer && gameSourceDB.getIdPlayerTwo() != idPlayer) {
+      throw new NameNotFoundException(
+          "Player not in game " + gameSource.getId());
+    }
+
+    if (gameSourceDB.getIdPlayerOne() == idPlayer) {
+      gameSourceDB.setPointPlayerOne(gameSource.getPointPlayerOne());
+      gameSourceDB.setPlayerOneFinishTime((new Date()).getTime());
+    } else {
+      gameSourceDB.setPointPlayerTwo(gameSource.getPointPlayerTwo());
+      gameSourceDB.setPlayerTwoFinishTime((new Date()).getTime());
+    }
+
+    if (gameSourceDB.getGameStatus() == GameStatus.PLAYING) {
+      gameSourceDB.setGameStatus(GameStatus.FINISH_PLAYER);
+    } else {
+      gameSourceDB.setGameStatus(GameStatus.FINISHED);
+      gameSourceDB.setUserWinner(gammerWinner(gameSourceDB));
+    }
+
+    return gameRepository.save(gameSourceDB);
+  }
+
+  private Long gammerWinner(Game gameSourceDB) {
+
+    if (gameSourceDB.getPointPlayerOne() > gameSourceDB.getPointPlayerTwo()) {
+     
+      return gameSourceDB.getIdPlayerOne();
+    }else if (gameSourceDB.getPointPlayerOne() < gameSourceDB.getPointPlayerTwo()) {
+      
+      return gameSourceDB.getIdPlayerTwo();
+    }else{
+      
+      if (gameSourceDB.getPlayerOneFinishTime() < gameSourceDB.getPlayerTwoFinishTime()) {
+        
+        return gameSourceDB.getIdPlayerOne();
+      }else{  
+       
+        return gameSourceDB.getIdPlayerTwo();
+      }
+    }
+  }
 }
