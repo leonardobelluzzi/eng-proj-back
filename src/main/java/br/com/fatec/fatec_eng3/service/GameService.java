@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import br.com.fatec.fatec_eng3.model.Points;
 import br.com.fatec.fatec_eng3.repository.GameRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 @Scope("prototype")
@@ -114,7 +116,7 @@ public class GameService {
     }
 
     Game gameSourceDB = game.get();
-    
+
     if (gameSourceDB.getIdPlayerOne() != idPlayer && gameSourceDB.getIdPlayerTwo() != idPlayer) {
       throw new NameNotFoundException(
           "Player not in game " + gameSource.getId());
@@ -141,20 +143,63 @@ public class GameService {
   private Long gammerWinner(Game gameSourceDB) {
 
     if (gameSourceDB.getPointPlayerOne() > gameSourceDB.getPointPlayerTwo()) {
-     
+
       return gameSourceDB.getIdPlayerOne();
-    }else if (gameSourceDB.getPointPlayerOne() < gameSourceDB.getPointPlayerTwo()) {
-      
+    } else if (gameSourceDB.getPointPlayerOne() < gameSourceDB.getPointPlayerTwo()) {
+
       return gameSourceDB.getIdPlayerTwo();
-    }else{
-      
+    } else {
+
       if (gameSourceDB.getPlayerOneFinishTime() < gameSourceDB.getPlayerTwoFinishTime()) {
-        
+
         return gameSourceDB.getIdPlayerOne();
-      }else{  
-       
+      } else {
+
         return gameSourceDB.getIdPlayerTwo();
       }
     }
+  }
+
+  public Points getPoints(String id) throws NameNotFoundException {
+
+    Optional<Game> game = gameRepository.findById(Long.valueOf(id));
+
+    if (!game.isPresent()) {
+      throw new NameNotFoundException(
+          "Game not found to key " + id);
+    }
+
+    Game gameSourceDB = game.get();
+
+    Points points = Points
+        .builder()
+        .idRoom(gameSourceDB.getId())
+        .pointPlayerOne(gameSourceDB.getPointPlayerOne())
+        .pointPlayerTwo(gameSourceDB.getPointPlayerTwo())
+        .build();
+
+    return points;
+  }
+
+  @Transactional
+  public Points addPoints(String id, Long idPlayer, Long points) throws NameNotFoundException {
+
+    Optional<Game> game = gameRepository.findById(Long.valueOf(id));
+
+    if (!game.isPresent()) {
+      throw new NameNotFoundException(
+          "Game not found to key " + id);
+    }
+
+    Game gameSourceDB = game.get();
+
+    if (gameSourceDB.getIdPlayerOne() == idPlayer) {
+      gameRepository.incrementPointPlayerOne(Long.valueOf(id), points);
+    } else {
+      gameRepository.incrementPointPlayerTwo(Long.valueOf(id), points);
+    }
+
+    return getPoints(id);
+
   }
 }
