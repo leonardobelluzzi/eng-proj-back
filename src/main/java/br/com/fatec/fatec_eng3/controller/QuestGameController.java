@@ -106,6 +106,44 @@ public class QuestGameController {
     }
   }
 
+  @GetMapping("/points/{id}")
+  public ResponseEntity<?> getPoints(@PathVariable String id) {
+    try {
+      return ResponseEntity.ok(produtoService.getPoints(id));
+    
+    } catch (NameNotFoundException e) {
+      // caso naome nao exista
+      return ResponseEntity.badRequest().build();
+    } catch (Exception e) {
+      return new ResponseEntity<>(
+          ErrorResponseQuest
+              .builder()
+              .error(e.getMessage())
+              .stack(ExceptionUtils.getStackTrace(e))
+              .build(),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GetMapping("/points/{id}/{idPlayer}/{points}")
+  public ResponseEntity<?> addPoints(@PathVariable String id, @PathVariable String idPlayer, @PathVariable String points) {
+    try {
+      return ResponseEntity.ok(produtoService.addPoints(id, Long.valueOf(idPlayer), Long.valueOf(points)));
+    
+    } catch (NameNotFoundException e) {
+      // caso naome nao exista
+      return ResponseEntity.badRequest().build();
+    } catch (Exception e) {
+      return new ResponseEntity<>(
+          ErrorResponseQuest
+              .builder()
+              .error(e.getMessage())
+              .stack(ExceptionUtils.getStackTrace(e))
+              .build(),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   @GetMapping("/question/{id}")
   public ResponseEntity<?> findUQestion(@PathVariable Long id) {
 
