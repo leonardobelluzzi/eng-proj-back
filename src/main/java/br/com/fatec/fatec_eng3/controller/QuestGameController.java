@@ -34,7 +34,7 @@ public class QuestGameController {
   @PostMapping("/createGame")
   public ResponseEntity<?> createGame(@RequestBody CreateGame createGame) {
     try {
-      return ResponseEntity.ok(produtoService.generateNewGame(createGame.getIdUser()));
+      return ResponseEntity.ok(produtoService.generateNewGame(createGame.getIdUser(), createGame.getUserName()));
     } catch (Exception e) {
       return new ResponseEntity<>(
           ErrorResponseQuest
@@ -49,7 +49,7 @@ public class QuestGameController {
   @PostMapping("/joinGame")
   public ResponseEntity<?> joinGame(@RequestBody JoinGame joinGame) {
     try {
-      return ResponseEntity.ok(produtoService.joinGame(Long.valueOf(joinGame.getRoomCode()), joinGame.getIdUser()));
+      return ResponseEntity.ok(produtoService.joinGame(Long.valueOf(joinGame.getRoomCode()), joinGame.getIdUser(), joinGame.getUserName()));
     } catch (NameNotFoundException e) {
       // caso naome nao exista
       return ResponseEntity.badRequest().build();

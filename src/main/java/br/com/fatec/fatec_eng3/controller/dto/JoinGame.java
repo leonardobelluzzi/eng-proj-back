@@ -8,4 +8,6 @@ public class JoinGame {
   private Long idUser;
 
   private String roomCode;
+
+  private String userName;
 }

@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import br.com.fatec.fatec_eng3.model.Points;
+import br.com.fatec.fatec_eng3.model.Wallet;
 import br.com.fatec.fatec_eng3.repository.GameRepository;
 import jakarta.transaction.Transactional;
 
@@ -24,7 +25,10 @@ public class GameService {
   @Autowired
   private GameRepository gameRepository;
 
-  public Game joinGame(Long idJogo, Long idPlayerTwo) throws NameNotFoundException {
+  @Autowired
+  private WalletService walletService;
+
+  public Game joinGame(Long idJogo, Long idPlayerTwo, String playerTwoUserName) throws NameNotFoundException {
     Optional<Game> game = gameRepository.findById(idJogo);
 
     if (!game.isPresent()) {
@@ -37,22 +41,26 @@ public class GameService {
     if (gameSource.getGameStatus() != GameStatus.CREATED) {
 
       throw new NameNotFoundException(
-          "Game not palying or finished " + idJogo);
+          "Game not playing or finished " + idJogo);
 
     }
 
     gameSource.setGameStatus(GameStatus.PLAYING);
     gameSource.setIdPlayerTwo(idPlayerTwo);
+    gameSource.setPlayerTwoUserName(playerTwoUserName);
+
+    walletService.spendCoins(idPlayerTwo, 50L);
 
     return gameRepository.save(gameSource);
   }
 
-  public Game generateNewGame(Long playerOneName) {
+  public Game generateNewGame(Long playerOneId, String playerOneUserName) {
 
     Game game = Game
         .builder()
         .gameStatus(GameStatus.CREATED)
-        .idPlayerOne(playerOneName)
+        .idPlayerOne(playerOneId)
+        .playerOneUserName(playerOneUserName)
         .questions(questionService.getAnswersToGame())
         .pointPlayerOne(0)
         .pointPlayerTwo(0)
@@ -61,6 +69,8 @@ public class GameService {
     game = gameRepository.save(game);
 
     game.setIdFormat(String.format("%06d", game.getId()));
+
+    walletService.spendCoins(playerOneId, 50L);
 
     return game;
   }
@@ -106,8 +116,7 @@ public class GameService {
     return gameRepository.save(gameSource);
   }
 
-  public Game finishGame(Game gameSource, Long idPlayer) throws NameNotFoundException {
-
+  public synchronized Game finishGame(Game gameSource, Long idPlayer) throws NameNotFoundException {
     Optional<Game> game = gameRepository.findById(gameSource.getId());
 
     if (!game.isPresent()) {
@@ -123,10 +132,8 @@ public class GameService {
     }
 
     if (gameSourceDB.getIdPlayerOne() == idPlayer) {
-      gameSourceDB.setPointPlayerOne(gameSource.getPointPlayerOne());
       gameSourceDB.setPlayerOneFinishTime((new Date()).getTime());
     } else {
-      gameSourceDB.setPointPlayerTwo(gameSource.getPointPlayerTwo());
       gameSourceDB.setPlayerTwoFinishTime((new Date()).getTime());
     }
 
@@ -134,16 +141,19 @@ public class GameService {
       gameSourceDB.setGameStatus(GameStatus.FINISH_PLAYER);
     } else {
       gameSourceDB.setGameStatus(GameStatus.FINISHED);
-      gameSourceDB.setUserWinner(gammerWinner(gameSourceDB));
+      Long idWinner = gammerWinner(gameSourceDB);
+      Wallet wallet = walletService.findByUserId(idWinner);
+      if (wallet != null) {
+        wallet.addCoins(200L);
+      }
+      gameSourceDB.setUserWinner(idWinner);
     }
-
+  
     return gameRepository.save(gameSourceDB);
   }
 
   private Long gammerWinner(Game gameSourceDB) {
-
     if (gameSourceDB.getPointPlayerOne() > gameSourceDB.getPointPlayerTwo()) {
-
       return gameSourceDB.getIdPlayerOne();
     } else if (gameSourceDB.getPointPlayerOne() < gameSourceDB.getPointPlayerTwo()) {
 
@@ -160,7 +170,7 @@ public class GameService {
     }
   }
 
-  public Points getPoints(String id) throws NameNotFoundException {
+  public synchronized Points getPoints(String id) throws NameNotFoundException {
 
     Optional<Game> game = gameRepository.findById(Long.valueOf(id));
 
@@ -182,7 +192,7 @@ public class GameService {
   }
 
   @Transactional
-  public Points addPoints(String id, Long idPlayer, Long points) throws NameNotFoundException {
+  public synchronized Points addPoints(String id, Long idPlayer, Long points) throws NameNotFoundException {
 
     Optional<Game> game = gameRepository.findById(Long.valueOf(id));
 

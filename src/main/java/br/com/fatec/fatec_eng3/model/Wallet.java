@@ -43,7 +43,7 @@ public class Wallet {
 
   public void removeCoins(Long amount) {
     if (amount > 0 && this.coins >= amount) {
-      this.coins -= amount;
+      this.coins = this.coins - amount;
     }
   }
 }

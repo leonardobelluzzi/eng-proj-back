@@ -6,5 +6,6 @@ import lombok.Data;
 public class CreateGame {
 
     private Long idUser; 
+    private String userName;
 
 }

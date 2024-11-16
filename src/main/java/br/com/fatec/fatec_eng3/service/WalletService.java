@@ -29,4 +29,28 @@ public class WalletService {
 
         return walletRepository.save(wallet);
     }
+
+    public Wallet spendCoins(long userId, long coins) {
+        Optional<Wallet> walletOptional = walletRepository.findByUserId(userId);
+        if (walletOptional.isEmpty()) {
+            throw new RuntimeException("Wallet not found");
+        }
+
+        Wallet wallet = walletOptional.get();
+        wallet.removeCoins(coins);
+
+        return walletRepository.save(wallet);
+    }
+
+    public Wallet winCoins(long userId, long coins) {
+        Optional<Wallet> walletOptional = walletRepository.findByUserId(userId);
+        if (walletOptional.isEmpty()) {
+            throw new RuntimeException("Wallet not found");
+        }
+
+        Wallet wallet = walletOptional.get();
+        wallet.addCoins(coins);
+
+        return walletRepository.save(wallet);
+    }
 }

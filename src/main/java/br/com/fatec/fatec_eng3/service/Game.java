@@ -57,4 +57,7 @@ public class Game {
 
   private Long userWinner;
 
+  private String playerOneUserName;
+
+  private String playerTwoUserName;
 }

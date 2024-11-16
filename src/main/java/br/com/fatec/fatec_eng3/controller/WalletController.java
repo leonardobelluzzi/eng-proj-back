@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fatec.fatec_eng3.controller.dto.BuyCoinsDTO;
+import br.com.fatec.fatec_eng3.controller.dto.SpendCoinsDTO;
 import br.com.fatec.fatec_eng3.model.Wallet;
 import br.com.fatec.fatec_eng3.service.WalletService;
 import jakarta.validation.Valid;
@@ -41,6 +42,18 @@ public class WalletController {
     public ResponseEntity<?> buyCoins(@RequestBody @Valid BuyCoinsDTO buyCoinsDTO) {
       try {
         Wallet wallet = walletService.buyCoins(buyCoinsDTO.getIdUser(), buyCoinsDTO.getCoins());
+        HashMap<String, Long> response = new HashMap<>();
+        response.put("coins", wallet.getCoins());
+        return ResponseEntity.ok(response);
+      } catch (Exception e) {
+        return ResponseEntity.unprocessableEntity().body(e.getMessage());
+      }
+    }
+
+    @PostMapping("/coins/spend")
+    public ResponseEntity<?> spendCoins(@RequestBody @Valid SpendCoinsDTO spendCoinsDTO) {
+      try {
+        Wallet wallet = walletService.spendCoins(spendCoinsDTO.getIdUser(), spendCoinsDTO.getCoins());
         HashMap<String, Long> response = new HashMap<>();
         response.put("coins", wallet.getCoins());
         return ResponseEntity.ok(response);
