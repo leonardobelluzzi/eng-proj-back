@@ -144,7 +144,11 @@ public class GameService {
       Long idWinner = gammerWinner(gameSourceDB);
       Wallet wallet = walletService.findByUserId(idWinner);
       if (wallet != null) {
-        wallet.addCoins(200L);
+        if (gameSourceDB.getIdPlayerOne() == idWinner) {
+          wallet.addCoins(Long.valueOf(gameSourceDB.getPointPlayerOne()));
+        } else {
+          wallet.addCoins(Long.valueOf(gameSourceDB.getPointPlayerTwo()));
+        }
       }
       gameSourceDB.setUserWinner(idWinner);
     }
